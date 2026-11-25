@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FilmCraft + Kiro MCP | Guida Interattiva al Montaggio AI</title>
+  <!-- Chosen Palette: Warm Editorial Stone & Cinema Amber (Background #FAF8F5, Cards #FFFFFF, Borders #E7E2DA, Text #1C1917, Primary Accent #B45309, Secondary Accent #0F766E) -->
+  <!-- Application Structure Plan: L'applicazione è strutturata in quattro viste navigabili (Dashboard & Architettura, Configuratore mcp.json, Regia Trailer iMovie, Catalogo Tool & Limiti Alpha). Nella sezione Regia Trailer iMovie è integrato sia il simulatore ritmico 0-40s sia un calcolatore interattivo di stima dei crediti Kiro che mostra l'impatto dell'uso di command_batch e render_frame rispetto alla durata del video. -->
+  <!-- Visualization & Content Choices: 1) Confronto Risorse & Maturità (Chart.js Bar Chart su Canvas) -> Toggle tra Risorse e Maturità. 2) Ritmo Tagli Trailer iMovie (Chart.js Bar Chart su Canvas) -> Clic sulle fasi per aggiornare dettagli comandi JSON. 3) Calcolatore Crediti Kiro + Convertitore Tick -> Input interattivi HTML/JS per stimare turni agentici, clip e consumo crediti. -->
+  <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background-color: #FAF8F5;
+      color: #1C1917;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .chart-container {
+      position: relative;
+      width: 100%;
+      max-width: 640px;
+      margin-left: auto;
+      margin-right: auto;
+      height: 290px;
+      max-height: 360px;
+    }
+    @media (min-width: 768px) {
+      .chart-container {
+        height: 330px;
+      }
+    }
+    .nav-pill.active {
+      background-color: #1C1917;
+      color: #FAF8F5;
+    }
+    .code-scroll::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    .code-scroll::-webkit-scrollbar-thumb {
+      background: #A8A29E;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-amber-200 selection:text-stone-900">
+
+  <header class="border-b border-stone-200 bg-white/90 backdrop-blur sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+            ✓ Compatibile via MCP stdio
+          </span>
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-900">
+            Stato Alpha • v0.20.1
+          </span>
+        </div>
+        <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-stone-900 mt-1">
+          FilmCraft + Kiro: Montaggio Video AI &amp; Trailer iMovie
+        </h1>
+      </div>
+      <nav aria-label="Navigazione principale" class="flex flex-wrap gap-1.5 bg-stone-100 p-1 rounded-xl border border-stone-200">
+        <button type="button" data-tab="overview" class="nav-pill active px-3 py-1.5 rounded-lg text-sm font-medium transition">
+          1. Architettura
+        </button>
+        <button type="button" data-tab="setup" class="nav-pill px-3 py-1.5 rounded-lg text-sm font-medium text-stone-700 hover:bg-stone-200/70 transition">
+          2. Setup mcp.json
+        </button>
+        <button type="button" data-tab="trailer" class="nav-pill px-3 py-1.5 rounded-lg text-sm font-medium text-stone-700 hover:bg-stone-200/70 transition">
+          3. Trailer iMovie &amp; Crediti
+        </button>
+        <button type="button" data-tab="reference" class="nav-pill px-3 py-1.5 rounded-lg text-sm font-medium text-stone-700 hover:bg-stone-200/70 transition">
+          4. Tool &amp; Limiti
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+    <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm">
+        <p class="text-xs font-medium uppercase tracking-wider text-stone-500">Server MCP Nativo</p>
+        <p class="text-2xl font-bold text-stone-900 mt-1">17 Tool</p>
+        <p class="text-xs text-stone-600 mt-1">9 Core + 8 UI in modalità Bridge su <code class="bg-stone-100 px-1 rounded">stdio</code></p>
+      </div>
+      <div class="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm">
+        <p class="text-xs font-medium uppercase tracking-wider text-stone-500">Comandi Motore Rust</p>
+        <p class="text-2xl font-bold text-amber-700 mt-1">&gt; 650</p>
+        <p class="text-xs text-stone-600 mt-1">Esposti da <code class="bg-stone-100 px-1 rounded">crates/engine</code> con undo completo</p>
+      </div>
+      <div class="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm">
+        <p class="text-xs font-medium uppercase tracking-wider text-stone-500">Stima Trailer 2 Min</p>
+        <p class="text-2xl font-bold text-teal-700 mt-1">8–25 crediti</p>
+        <p class="text-xs text-stone-600 mt-1">Ottimizzato con <code class="bg-stone-100 px-1 rounded">command_batch</code></p>
+      </div>
+      <div class="bg-white p-4 rounded-2xl border border-stone-200 shadow-sm">
+        <p class="text-xs font-medium uppercase tracking-wider text-stone-500">Precisione Temporale</p>
+        <p class="text-2xl font-bold text-stone-900 mt-1">254,016 GHz</p>
+        <p class="text-xs text-stone-600 mt-1">254.016.000.000 tick/s senza deriva fps</p>
+      </div>
+    </section>
+
+    <section id="tab-overview" class="tab-panel space-y-6">
+      <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
+        <h2 class="text-lg font-bold text-stone-900">Come funziona il collegamento tra Kiro e FilmCraft</h2>
+        <p class="text-sm text-stone-600 mt-2 leading-relaxed">
+          Questa sezione illustra l'architettura <em>engine-first</em> di FilmCraft e le due modalità operative disponibili per collegarlo a <strong>Kiro IDE</strong> e <strong>Kiro CLI</strong> tramite il server MCP locale <code class="bg-stone-100 px-1.5 py-0.5 rounded text-stone-800">filmcraft-cli mcp</code>. Puoi alternare tra la modalità <strong>Bridge</strong> e <strong>Headless</strong> per confrontarne requisiti, tool disponibili e casi d'uso, nonché analizzare l'impatto sulla memoria di sistema.
+        </p>
+
+        <div class="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          <div class="lg:col-span-7 bg-stone-50 p-5 rounded-xl border border-stone-200 space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold uppercase tracking-wider text-stone-500">Flusso di Controllo MCP</span>
+              <div class="inline-flex rounded-lg bg-stone-200 p-0.5 text-xs font-medium">
+                <button type="button" id="btn-mode-bridge" class="px-2.5 py-1 rounded-md bg-white text-stone-900 shadow-sm">Modalità Bridge</button>
+                <button type="button" id="btn-mode-headless" class="px-2.5 py-1 rounded-md text-stone-600">Modalità Headless</button>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-stretch text-center">
+              <div class="bg-white p-3.5 rounded-xl border border-stone-200 flex flex-col justify-between">
+                <div class="text-2xl">🤖</div>
+                <div class="font-semibold text-sm text-stone-900 mt-1">Kiro IDE / CLI</div>
+                <p class="text-xs text-stone-500 mt-1">Client locale MCP <code class="bg-stone-100 px-1 rounded">stdio</code> + Steering file</p>
+                <span class="mt-2 inline-block text-[11px] px-2 py-0.5 rounded bg-stone-100 text-stone-700">No Web/Mobile locale</span>
+              </div>
+
+              <div class="bg-amber-50/80 p-3.5 rounded-xl border border-amber-200 flex flex-col justify-between">
+                <div class="text-2xl">⚡</div>
+                <div class="font-semibold text-sm text-amber-950 mt-1">filmcraft-cli mcp</div>
+                <p id="arch-cli-cmd" class="text-xs font-mono text-amber-900 mt-1 break-all">mcp --bridge 127.0.0.1:9876</p>
+                <span id="arch-tool-badge" class="mt-2 inline-block text-[11px] px-2 py-0.5 rounded bg-amber-200/70 text-amber-950 font-medium">17 Tool MCP esposti</span>
+              </div>
+
+              <div class="bg-white p-3.5 rounded-xl border border-stone-200 flex flex-col justify-between">
+                <div id="arch-target-icon" class="text-2xl">🎬</div>
+                <div id="arch-target-title" class="font-semibold text-sm text-stone-900 mt-1">App GUI + crates/engine</div>
+                <p id="arch-target-desc" class="text-xs text-stone-500 mt-1">TCP JSON-lines su porta 9876 con anteprima visiva live</p>
+                <span id="arch-render-badge" class="mt-2 inline-block text-[11px] px-2 py-0.5 rounded bg-teal-50 text-teal-800">Screenshot Program Monitor</span>
+              </div>
+            </div>
+
+            <div id="arch-mode-summary" class="bg-white p-3.5 rounded-xl border border-stone-200 text-xs text-stone-700 leading-relaxed">
+              <strong>Bridge consigliata per il montaggio creativo:</strong> richiede l'apertura preventiva dell'app desktop con <code class="bg-stone-100 px-1 rounded">filmcraft --control 9876</code>. Ti permette di osservare Kiro mentre costruisce la timeline in tempo reale e abilita gli 8 tool UI (<code class="bg-stone-100 px-1 rounded">ui_inspect</code>, <code class="bg-stone-100 px-1 rounded">ui_screenshot</code>, controlli sintetici). Su macOS disattiva automaticamente <em>App Nap</em>.
+            </div>
+          </div>
+
+          <div class="lg:col-span-5 bg-white p-5 rounded-xl border border-stone-200">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-sm font-bold text-stone-900">Benchmark &amp; Indicatori</h3>
+              <select id="overview-chart-select" aria-label="Seleziona metrica grafico" class="text-xs border border-stone-300 rounded-lg px-2 py-1 bg-stone-50 text-stone-800">
+                <option value="memory">Consumo Server MCP Inattivo</option>
+                <option value="maturity">Copertura vs Prontezza Alpha</option>
+              </select>
+            </div>
+            <div class="chart-container">
+              <canvas id="overviewChart"></canvas>
+            </div>
+            <p id="overview-chart-caption" class="text-xs text-stone-500 mt-2 text-center">
+              Impatto della limitazione thread e disabilitazione probing GPU (issue #4266 su Linux aarch64).
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
+        <h3 class="text-base font-bold text-stone-900">Ciclo Operativo Consigliato per l'Agente</h3>
+        <p class="text-xs text-stone-600 mt-1">
+          Poiché alcuni comandi di FilmCraft ignorano silenziosamente parametri errati, Kiro deve eseguire questo ciclo iterativo a 5 fasi.
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-5 gap-3 mt-4">
+          <div class="p-3.5 rounded-xl bg-stone-50 border border-stone-200">
+            <span class="text-xs font-bold text-amber-700">FASE 1</span>
+            <h4 class="font-semibold text-sm text-stone-900 mt-0.5">Ispezionare</h4>
+            <p class="text-xs text-stone-600 mt-1">Leggere ID di bin, media e clip con <code class="bg-white px-1 rounded">project_inspect</code> e <code class="bg-white px-1 rounded">sequence_inspect</code>.</p>
+          </div>
+          <div class="p-3.5 rounded-xl bg-stone-50 border border-stone-200">
+            <span class="text-xs font-bold text-amber-700">FASE 2</span>
+            <h4 class="font-semibold text-sm text-stone-900 mt-0.5">Verificare</h4>
+            <p class="text-xs text-stone-600 mt-1">Controllare schema e stato <code class="bg-white px-1 rounded">enabled</code> via <code class="bg-white px-1 rounded">command_list</code> filtrato.</p>
+          </div>
+          <div class="p-3.5 rounded-xl bg-stone-50 border border-stone-200">
+            <span class="text-xs font-bold text-amber-700">FASE 3</span>
+            <h4 class="font-semibold text-sm text-stone-900 mt-0.5">Eseguire in Batch</h4>
+            <p class="text-xs text-stone-600 mt-1">Raggruppare 15–20 operazioni in <code class="bg-white px-1 rounded">command_batch</code> per risparmiare turni.</p>
+          </div>
+          <div class="p-3.5 rounded-xl bg-stone-50 border border-stone-200">
+            <span class="text-xs font-bold text-amber-700">FASE 4</span>
+            <h4 class="font-semibold text-sm text-stone-900 mt-0.5">Controllare</h4>
+            <p class="text-xs text-stone-600 mt-1">Generare PNG di tagli e titoli tramite <code class="bg-white px-1 rounded">render_frame</code> o <code class="bg-white px-1 rounded">ui_screenshot</code>.</p>
+          </div>
+          <div class="p-3.5 rounded-xl bg-stone-50 border border-stone-200">
+            <span class="text-xs font-bold text-amber-700">FASE 5</span>
+            <h4 class="font-semibold text-sm text-stone-900 mt-0.5">Correggere</h4>
+            <p class="text-xs text-stone-600 mt-1">Annullare eventuali errori con <code class="bg-white px-1 rounded">edit.undo</code> prima di proseguire.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-setup" class="tab-panel hidden space-y-6">
+      <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
+        <h2 class="text-lg font-bold text-stone-900">Generatore Configurazione Kiro MCP</h2>
+        <p class="text-sm text-stone-600 mt-2 leading-relaxed">
+          Seleziona il tuo sistema operativo, la modalità di collegamento e le opzioni di ottimizzazione per generare immediatamente il file <code class="bg-stone-100 px-1.5 py-0.5 rounded">.kiro/settings/mcp.json</code> (oppure globale <code class="bg-stone-100 px-1.5 py-0.5 rounded">~/.kiro/settings/mcp.json</code>) pronto da incollare in Kiro IDE o Kiro CLI.
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
+          <div class="lg:col-span-5 space-y-4 bg-stone-50 p-5 rounded-xl border border-stone-200">
+            <div>
+              <label for="cfg-os" class="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1.5">Sistema Operativo</label>
+              <select id="cfg-os" class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900">
+                <option value="macos">macOS (Apple Silicon / Intel)</option>
+                <option value="windows">Windows (.msi installer)</option>
+                <option value="linux">Linux / FreeBSD (.deb / .rpm)</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="cfg-mode" class="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1.5">Modalità di Connessione</label>
+              <select id="cfg-mode" class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900">
+                <option value="bridge">Bridge (GUI aperta su porta 9876)</option>
+                <option value="headless">Headless (Background senza finestra)</option>
+                <option value="headless-demo">Headless con progetto --demo</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="cfg-port" class="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1.5">Porta TCP Control (solo Bridge)</label>
+              <input id="cfg-port" type="number" value="9876" min="1024" max="65535" class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900">
+            </div>
+
+            <div class="space-y-2.5 pt-2 border-t border-stone-200">
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input id="cfg-low-ram" type="checkbox" class="mt-0.5 rounded border-stone-300 text-amber-700 focus:ring-amber-600">
+                <span class="text-xs text-stone-700">
+                  <strong>Riduci RAM inattiva (~23,8 MiB)</strong><br>
+                  Limita thread Tokio/Rayon e disabilita probing GPU CUDA/VAAPI all'avvio.
+                </span>
+              </label>
+
+              <label class="flex items-start gap-2.5 cursor-pointer">
+                <input id="cfg-autoapprove" type="checkbox" checked class="mt-0.5 rounded border-stone-300 text-amber-700 focus:ring-amber-600">
+                <span class="text-xs text-stone-700">
+                  <strong>Auto-Approve sicuri (sola lettura + preview)</strong><br>
+                  Approva <code class="bg-white px-1 rounded">inspect</code> e <code class="bg-white px-1 rounded">render_frame</code>, richiedendo conferma per modifiche ed export.
+                </span>
+              </label>
+            </div>
+
+            <div class="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-950">
+              <strong>Nota Sicurezza:</strong> <code class="bg-amber-100 px-1 rounded">filmcraft-cli mcp</code> ignora flag come <code class="bg-amber-100 px-1 rounded">--automation-read-root</code>. Attiva <code class="bg-amber-100 px-1 rounded">mcpSandboxing</code> nelle impostazioni di Kiro.
+            </div>
+          </div>
+
+          <div class="lg:col-span-7 space-y-4">
+            <div class="bg-stone-900 text-stone-100 rounded-xl p-4 border border-stone-800">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-mono text-stone-400">1. Avvio da Terminale</span>
+                <button type="button" data-copy="cmd-output" class="copy-btn text-xs px-2.5 py-1 rounded bg-stone-800 hover:bg-stone-700 text-stone-200 transition">
+                  Copia comando
+                </button>
+              </div>
+              <pre id="cmd-output" class="text-xs font-mono text-emerald-300 overflow-x-auto code-scroll py-1"></pre>
+            </div>
+
+            <div class="bg-stone-900 text-stone-100 rounded-xl p-4 border border-stone-800">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-mono text-stone-400">2. .kiro/settings/mcp.json</span>
+                <button type="button" data-copy="json-output" class="copy-btn text-xs px-2.5 py-1 rounded bg-amber-700 hover:bg-amber-600 text-white font-medium transition">
+                  Copia JSON
+                </button>
+              </div>
+              <pre id="json-output" class="text-xs font-mono text-stone-100 overflow-x-auto code-scroll max-h-80 leading-relaxed"></pre>
+            </div>
+
+            <div class="bg-stone-50 p-4 rounded-xl border border-stone-200 text-xs text-stone-700 space-y-1.5">
+              <p><strong>Gerarchia precedenza in Kiro:</strong> Configurazione Agente &gt; Workspace (<code class="bg-white px-1 rounded">.kiro/settings/mcp.json</code>) &gt; Utente (<code class="bg-white px-1 rounded">~/.kiro/settings/mcp.json</code>).</p>
+              <p><strong>Tool Search automatico:</strong> Attivo di default in Kiro IDE 1.3+ e Kiro CLI 2.31+ (V3), carica gli schemi dei 17 tool on-demand senza saturare il contesto.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-trailer" class="tab-panel hidden space-y-6">
+      <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+          <div>
+            <h2 class="text-lg font-bold text-stone-900">Calcolatore Crediti Kiro per Montaggio Trailer</h2>
+            <p class="text-xs text-stone-600 mt-1">
+              Stima quanti crediti Kiro verranno consumati in base alla durata del trailer, all'uso di <code class="bg-stone-100 px-1 rounded">command_batch</code>, alle anteprime visive <code class="bg-stone-100 px-1 rounded">render_frame</code> e al modello LLM scelto.
+            </p>
+          </div>
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-800 border border-teal-200 self-start">
+            Ottimizzazione Risparmio Crediti
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-5">
+          <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-stone-50 p-5 rounded-xl border border-stone-200">
+            <div>
+              <div class="flex justify-between text-xs font-semibold text-stone-700 mb-1">
+                <label for="credit-duration">Durata Trailer</label>
+                <span id="credit-duration-label" class="font-mono text-amber-800">120s (2:00 min)</span>
+              </div>
+              <input id="credit-duration" type="range" min="30" max="180" step="10" value="120" class="w-full accent-amber-700">
+              <p class="text-[11px] text-stone-500 mt-1">Da teaser 30s fino a trailer esteso 3 min</p>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs font-semibold text-stone-700 mb-1">
+                <label for="credit-renders">Verifiche render_frame</label>
+                <span id="credit-renders-label" class="font-mono text-amber-800">5 fotogrammi</span>
+              </div>
+              <input id="credit-renders" type="range" min="0" max="15" step="1" value="5" class="w-full accent-amber-700">
+              <p class="text-[11px] text-stone-500 mt-1">Ogni PNG nel contesto aumenta i token</p>
+            </div>
+
+            <div>
+              <label for="credit-batch" class="block text-xs font-semibold text-stone-700 mb-1">Strategia Esecuzione MCP</label>
+              <select id="credit-batch" class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs text-stone-900">
+                <option value="batch">Ottimizzata: command_batch (15–20 step/turno)</option>
+                <option value="mixed">Mista: alcuni batch + ritocchi singoli</option>
+                <option value="single">Non ottimizzata: command_run singolo per clip</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="credit-model" class="block text-xs font-semibold text-stone-700 mb-1">Profilo Modello Kiro</label>
+              <select id="credit-model" class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-xs text-stone-900">
+                <option value="auto">Modalità Auto / Modello Bilanciato</option>
+                <option value="flagship">Modello di Punta (es. Sonnet / Opus)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="lg:col-span-5 bg-stone-900 text-stone-100 p-5 rounded-xl border border-stone-800 flex flex-col justify-between">
+            <div>
+              <span class="text-xs font-semibold uppercase tracking-wider text-stone-400">Stima Consumo Sessione</span>
+              <div class="flex items-baseline gap-2 mt-1">
+                <span id="credit-range-output" class="text-3xl font-bold text-amber-400">8 – 16 crediti</span>
+                <span class="text-xs text-stone-400">stimati</span>
+              </div>
+              <div class="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-stone-800 text-center">
+                <div class="bg-stone-800/70 p-2 rounded-lg">
+                  <div class="text-[11px] text-stone-400">Tagli / Clip</div>
+                  <div id="credit-clips-output" class="text-sm font-bold text-white mt-0.5">~55</div>
+                </div>
+                <div class="bg-stone-800/70 p-2 rounded-lg">
+                  <div class="text-[11px] text-stone-400">Turni MCP</div>
+                  <div id="credit-turns-output" class="text-sm font-bold text-emerald-400 mt-0.5">12 – 16</div>
+                </div>
+                <div class="bg-stone-800/70 p-2 rounded-lg">
+                  <div class="text-[11px] text-stone-400">Efficienza</div>
+                  <div id="credit-efficiency-output" class="text-sm font-bold text-teal-300 mt-0.5">Alta</div>
+                </div>
+              </div>
+            </div>
+            <p id="credit-advice-output" class="text-xs text-stone-300 mt-4 leading-relaxed">
+              Ottimo bilanciamento: <code class="bg-stone-800 px-1 rounded text-amber-300">command_batch</code> raggruppa i 55 tagli in pochi turni e riduce al minimo il reinvio della cronologia chat.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
+        <h2 class="text-lg font-bold text-stone-900">Regia di Trailer Brevi in Stile Apple iMovie</h2>
+        <p class="text-sm text-stone-600 mt-2 leading-relaxed">
+          FilmCraft è un editor NLE professionale (modello Premiere Pro) privo di template guidati iMovie: per ottenere lo stesso impatto visivo, istruisci Kiro tramite un <strong>Steering File</strong> che orchestra tagli serrati in crescendo, carte titolo a schermo pieno, movimento <em>Ken Burns</em> su scala/posizione, dissolvenze e color grading Lumetri. Clicca sulle quattro fasi della timeline per esplorarne struttura e comandi JSON.
+        </p>
+
+        <div class="mt-6 space-y-4">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold uppercase tracking-wider text-stone-500">Timeline Strutturale (Proporzioni Ritmiche • 24 fps • 1920x1080)</span>
+            <span class="text-xs text-stone-500">Clicca una fase per ispezionare</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-2">
+            <button type="button" data-phase="0" class="phase-btn md:col-span-2 text-left p-3 rounded-xl border-2 border-amber-600 bg-amber-50 transition">
+              <div class="text-[11px] font-bold text-amber-800">0–10% Durata</div>
+              <div class="font-bold text-sm text-stone-900">1. Apertura</div>
+              <div class="text-xs text-stone-600 mt-0.5">Titolo hook + fade</div>
+            </button>
+            <button type="button" data-phase="1" class="phase-btn md:col-span-5 text-left p-3 rounded-xl border border-stone-200 bg-stone-50 hover:bg-stone-100 transition">
+              <div class="text-[11px] font-bold text-teal-800">10–55% Durata</div>
+              <div class="font-bold text-sm text-stone-900">2. Sviluppo &amp; Ken Burns</div>
+              <div class="text-xs text-stone-600 mt-0.5">Clip 1.2–2.0s + carte titolo V2</div>
+            </button>
+            <button type="button" data-phase="2" class="phase-btn md:col-span-3 text-left p-3 rounded-xl border border-stone-200 bg-stone-50 hover:bg-stone-100 transition">
+              <div class="text-[11px] font-bold text-rose-800">55–85% Durata</div>
+              <div class="font-bold text-sm text-stone-900">3. Climax</div>
+              <div class="text-xs text-stone-600 mt-0.5">Tagli rapidi 0.6–1.0s in crescendo</div>
+            </button>
+            <button type="button" data-phase="3" class="phase-btn md:col-span-2 text-left p-3 rounded-xl border border-stone-200 bg-stone-50 hover:bg-stone-100 transition">
+              <div class="text-[11px] font-bold text-stone-700">85–100% Durata</div>
+              <div class="font-bold text-sm text-stone-900">4. Chiusura</div>
+              <div class="text-xs text-stone-600 mt-0.5">Titolo finale + Dip to Black</div>
+            </button>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-2">
+            <div class="lg:col-span-6 bg-stone-50 p-5 rounded-xl border border-stone-200 flex flex-col justify-between">
+              <div>
+                <div class="flex items-center justify-between">
+                  <h3 id="phase-title" class="text-base font-bold text-stone-900">1. Apertura (0–10%): Carta Titolo Hook</h3>
+                  <span id="phase-pacing-badge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900">Ritmo: 2.5s / carta</span>
+                </div>
+                <p id="phase-desc" class="text-xs text-stone-700 mt-2 leading-relaxed">
+                  Crea la sequenza 1920x1080 a 24 fps e inserisce una carta titolo a schermo intero su sfondo nero con tipografia spaziata. È fondamentale passare esplicitamente sia <code>seconds</code> sia <code>time</code> per evitare sfasamenti rispetto al playhead (issue #326).
+                </p>
+              </div>
+              <div class="mt-4 bg-stone-900 text-stone-100 rounded-xl p-3.5">
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-[11px] font-mono text-stone-400">Esempio payload command_run / batch step</span>
+                  <button type="button" data-copy="phase-code" class="copy-btn text-[11px] px-2 py-0.5 rounded bg-stone-800 hover:bg-stone-700 text-stone-200">Copia</button>
+                </div>
+                <pre id="phase-code" class="text-xs font-mono text-amber-300 overflow-x-auto code-scroll"></pre>
+              </div>
+            </div>
+
+            <div class="lg:col-span-6 bg-white p-5 rounded-xl border border-stone-200">
+              <h3 class="text-sm font-bold text-stone-900 mb-1">Curva Ritmica del Trailer (Durata Media Clip)</h3>
+              <p class="text-xs text-stone-500 mb-3">La riduzione progressiva della durata delle inquadrature genera la tipica tensione iMovie.</p>
+              <div class="chart-container">
+                <canvas id="trailerChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div class="lg:col-span-7 bg-white p-6 rounded-2xl border border-stone-200 shadow-sm space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-base font-bold text-stone-900">Steering File Ottimizzato: <code class="text-amber-800">.kiro/steering/imovie-trailer.md</code></h3>
+              <p class="text-xs text-stone-600 mt-0.5">Include le regole anti-spreco crediti (<code class="bg-stone-100 px-1 rounded">command_batch</code> e <code class="bg-stone-100 px-1 rounded">command_list</code> filtrato).</p>
+            </div>
+            <button type="button" data-copy="steering-code" class="copy-btn text-xs px-3 py-1.5 rounded-lg bg-stone-900 hover:bg-stone-800 text-white font-medium">
+              Copia Steering
+            </button>
+          </div>
+          <pre id="steering-code" class="bg-stone-900 text-stone-100 p-4 rounded-xl text-xs font-mono overflow-x-auto code-scroll max-h-80 leading-relaxed">---
+inclusion: auto
+name: imovie-trailer-director
+description: Regole e comandi FilmCraft MCP per montare trailer brevi e dinamici in stile Apple iMovie ottimizzando i crediti.
+---
+
+# Regia per trailer in stile iMovie su FilmCraft
+
+1. **Ottimizzazione Crediti e Batching**: Non chiamare mai `command_run` in loop per posizionare clip o keyframe; raggruppa sempre 15-20 operazioni in un'unica chiamata `command_batch`. Chiama `command_list` sempre con il parametro `filter` per non scaricare oltre 650 definizioni nel contesto.
+2. **Selezione dai Nomi File**: Basati sui nomi dei file e sulle durate lette da `project_inspect` per ordinare le clip; limita `render_frame` a 4-6 istanti chiave senza ispezionare ogni singolo sorgente.
+3. **Struttura Ritmica iMovie**: Crea sequenza 1920x1080 a 24 fps (`file.newSequence`). Alterna Apertura (titolo hook), Sviluppo (clip 1.2-2.0s + carte titolo V2), Climax (tagli serrati 0.6-1.0s) e Chiusura (titolo finale + Dip to Black).
+4. **Media Handles obbligatori**: Lascia almeno 1 secondo di margine prima di `sourceIn` (>= 254016000000 tick) e in coda per evitare fermo immagine nelle transizioni.
+5. **Titoli, Ken Burns &amp; Export**: In `graphics.newText` passa sempre sia `seconds` che `time`. Per zoom/pan Ken Burns usa `effects.setParam` su `Motion` con `"keyframe": true`. Esporta con `file.exportMedia` passando `startSeconds`, `endSeconds` in camelCase e `"wait": true`.</pre>
+        </div>
+
+        <div class="lg:col-span-5 space-y-6">
+          <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm space-y-3">
+            <h3 class="text-base font-bold text-stone-900">Calcolatore Rapido Secondi ↔ Tick</h3>
+            <p class="text-xs text-stone-600">FilmCraft usa 254.016.000.000 tick/s per tagli esatti al fotogramma.</p>
+            <div class="grid grid-cols-2 gap-3 pt-1">
+              <div>
+                <label for="calc-seconds" class="block text-xs font-semibold text-stone-700 mb-1">Secondi</label>
+                <input id="calc-seconds" type="number" step="0.1" value="1.5" class="w-full rounded-lg border border-stone-300 px-3 py-2 text-sm font-mono">
+              </div>
+              <div>
+                <label for="calc-ticks" class="block text-xs font-semibold text-stone-700 mb-1">Tick Esatti</label>
+                <input id="calc-ticks" type="text" readonly value="381024000000" class="w-full rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 text-sm font-mono text-amber-900">
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-amber-50 p-6 rounded-2xl border border-amber-200 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-base font-bold text-amber-950">Prompt Pronto per Kiro</h3>
+              <button type="button" data-copy="prompt-code" class="copy-btn text-xs px-2.5 py-1 rounded-lg bg-amber-800 hover:bg-amber-700 text-white font-medium">
+                Copia Prompt
+              </button>
+            </div>
+            <pre id="prompt-code" class="bg-white/90 text-stone-800 p-3.5 rounded-xl border border-amber-200 text-xs whitespace-pre-wrap leading-relaxed">#imovie-trailer
+Importa i file video in /percorso/copia_clip e la traccia /percorso/musica.wav. Crea una sequenza 1920x1080 a 24 fps chiamata Trailer_Viaggio e monta un trailer in stile iMovie di circa 2 minuti usando command_batch per posizionare clip, carte titolo ("UN NUOVO INIZIO", "OLTRE L'ORIZZONTE", "LA SFIDA", "AUTUNNO 2026"), movimento Ken Burns e color grading Lumetri. Chiudi con Dip to Black e dissolvenza audio, poi mostrami 5 fotogrammi chiave con render_frame prima dell'export H.264.</pre>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-reference" class="tab-panel hidden space-y-6">
+      <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <h2 class="text-lg font-bold text-stone-900">Catalogo dei 17 Tool MCP di FilmCraft</h2>
+            <p class="text-xs text-stone-600 mt-1">Filtra per modalità di disponibilità (Headless + Bridge oppure solo Bridge GUI) o cerca per parola chiave.</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <input id="tool-search" type="text" placeholder="Cerca tool (es. render, ui, command)..." class="rounded-lg border border-stone-300 px-3 py-1.5 text-xs w-56">
+            <select id="tool-filter" aria-label="Filtra per modalità" class="rounded-lg border border-stone-300 px-3 py-1.5 text-xs bg-stone-50">
+              <option value="all">Tutti (17 tool)</option>
+              <option value="both">Entrambe le modalità (9)</option>
+              <option value="bridge">Solo Bridge GUI (8)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto border border-stone-200 rounded-xl">
+          <table class="min-w-full divide-y divide-stone-200 text-left text-xs">
+            <thead class="bg-stone-50 text-stone-600 font-semibold">
+              <tr>
+                <th class="px-4 py-3">Nome Tool MCP</th>
+                <th class="px-4 py-3">Modalità</th>
+                <th class="px-4 py-3">Categoria</th>
+                <th class="px-4 py-3">Descrizione Operativa</th>
+              </tr>
+            </thead>
+            <tbody id="tools-tbody" class="divide-y divide-stone-200 bg-white"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
+        <h2 class="text-lg font-bold text-stone-900">Limiti Alpha &amp; Accorgimenti Operativi (Issue GitHub)</h2>
+        <p class="text-xs text-stone-600 mt-1 mb-4">
+          Controlla questi 6 punti critici emersi dal repository <code class="bg-stone-100 px-1 rounded">storytold/filmcraft</code> prima di avviare produzioni reali.
+        </p>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="p-4 rounded-xl bg-stone-50 border border-stone-200">
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800">Issue #4327 • Transizioni</span>
+            <h3 class="font-bold text-sm text-stone-900 mt-2">Obbligo di Media Handles</h3>
+            <p class="text-xs text-stone-600 mt-1 leading-relaxed">
+              A differenza di iMovie, FilmCraft non sovrappone automaticamente le clip. Senza almeno 1 secondo di margine prima di <code class="bg-white px-1 rounded">sourceIn</code> e dopo la coda, le dissolvenze causano fermo immagine.
+            </p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-stone-50 border border-stone-200">
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900">Issue #347 &amp; #2831 • Parametri</span>
+            <h3 class="font-bold text-sm text-stone-900 mt-2">Validazione Permissiva</h3>
+            <p class="text-xs text-stone-600 mt-1 leading-relaxed">
+              Chiavi errate (es. <code class="bg-white px-1 rounded">start</code> invece di <code class="bg-white px-1 rounded">startSeconds</code> in <code class="bg-white px-1 rounded">file.exportMedia</code>) vengono ignorate senza errore. Verifica sempre con <code class="bg-white px-1 rounded">sequence_inspect</code>.
+            </p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-stone-50 border border-stone-200">
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900">Issue #236 • Audio</span>
+            <h3 class="font-bold text-sm text-stone-900 mt-2">Sample Rate 44,1 vs 48 kHz</h3>
+            <p class="text-xs text-stone-600 mt-1 leading-relaxed">
+              Frequenze miste o file MKV registrati con OBS possono generare crepitii. Allinea il sample rate in export o rimuxa preventivamente con <code class="bg-white px-1 rounded">ffmpeg -i in.mkv -c copy out.mp4</code>.
+            </p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-stone-50 border border-stone-200">
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-stone-200 text-stone-800">Issue #1877 • Grafica</span>
+            <h3 class="font-bold text-sm text-stone-900 mt-2">Versione Minima v0.16+</h3>
+            <p class="text-xs text-stone-600 mt-1 leading-relaxed">
+              Nelle versioni precedenti alla v0.16.0 <code class="bg-white px-1 rounded">graphics.set</code> sovrascriveva i valori statici. Usa build recenti (es. v0.20.1) e <code class="bg-white px-1 rounded">effects.setParam</code> con <code class="bg-white px-1 rounded">"keyframe": true</code>.
+            </p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-stone-50 border border-stone-200">
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800">Issue #476 &amp; #2238 • Sicurezza</span>
+            <h3 class="font-bold text-sm text-stone-900 mt-2">Nessun Confinamento Root</h3>
+            <p class="text-xs text-stone-600 mt-1 leading-relaxed">
+              Il server MCP ha i permessi completi del tuo utente sul disco. Lavora sempre su copie dedicate dei file sorgenti e abilita il sandbox MCP di Kiro.
+            </p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-stone-50 border border-stone-200">
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-stone-200 text-stone-800">Formati &amp; Render</span>
+            <h3 class="font-bold text-sm text-stone-900 mt-2">Nessun .prproj o VST3</h3>
+            <p class="text-xs text-stone-600 mt-1 leading-relaxed">
+              Manca il supporto diretto ai progetti Premiere <code class="bg-white px-1 rounded">.prproj</code> e plugin VST3/OpenFX: importa progetti esterni tramite FCPXML, AAF, OTIO o EDL.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const TICK_PER_SEC = 254016000000;
+
+    const mcpToolsData = [
+      { name: "command_list", mode: "both", category: "Introspezione", desc: "Elenca i >650 comandi disponibili (id, label, params, enabled), filtrabili per nome o stato." },
+      { name: "command_run", mode: "both", category: "Esecuzione", desc: "Esegue un singolo comando {id, params}; ogni azione è reversibile tramite edit.undo." },
+      { name: "command_batch", mode: "both", category: "Esecuzione", desc: "Esegue in sequenza un array di step {steps: [{id, params}], stop_on_error}." },
+      { name: "doc_inspect", mode: "both", category: "Ispezione", desc: "Restituisce l'intero albero del progetto e la sequenza attiva in una singola chiamata." },
+      { name: "project_inspect", mode: "both", category: "Ispezione", desc: "Legge bin, item multimediali (ID, tipo, durata) e metadati del progetto." },
+      { name: "sequence_inspect", mode: "both", category: "Ispezione", desc: "Legge tracce, clip (start, end, sourceIn/Out in tick, speed, gainDb), effetti, transizioni e playhead." },
+      { name: "media_import", mode: "both", category: "Media", desc: "Importa file video/audio tramite array paths (opzionali bin e image_sequence)." },
+      { name: "render_frame", mode: "both", category: "Anteprima", desc: "Genera PNG al timestamp seconds senza spostare il playhead (in Bridge scatta il Program Monitor)." },
+      { name: "render_preview", mode: "both", category: "Anteprima", desc: "Alias di render_frame per compatibilità con le altre applicazioni dell'ecosistema Craft." },
+      { name: "ui_inspect", mode: "bridge", category: "UI Bridge", desc: "Legge lo stato della GUI (strumento attivo, workspace, pannelli, zoom, riproduzione, fps)." },
+      { name: "ui_elements", mode: "bridge", category: "UI Bridge", desc: "Elenca i widget interattivi visibili con id, label e coordinate rect." },
+      { name: "ui_click", mode: "bridge", category: "UI Bridge", desc: "Simula un clic del mouse su un elemento o coordinata della finestra." },
+      { name: "ui_drag", mode: "bridge", category: "UI Bridge", desc: "Simula un trascinamento (drag-and-drop o scrub) nell'interfaccia grafica." },
+      { name: "ui_key", mode: "bridge", category: "UI Bridge", desc: "Invia scorciatoie da tastiera all'editor (es. Space, Cmd+K, J/K/L)." },
+      { name: "ui_type", mode: "bridge", category: "UI Bridge", desc: "Digita stringhe di testo nei campi attivi della GUI." },
+      { name: "ui_screenshot", mode: "bridge", category: "UI Bridge", desc: "Cattura uno screenshot dell'intera finestra o di un singolo pannello." },
+      { name: "ui_control", mode: "bridge", category: "UI Bridge", desc: "Accesso diretto ai metodi TCP JSON-lines (ui.set, ui.scroll, ui.timeline.locate)." }
+    ];
+
+    const trailerPhases = [
+      {
+        title: "1. Apertura (0–10%): Carta Titolo Hook",
+        badge: "Ritmo: 2.5s / carta",
+        desc: "Crea la sequenza 1920x1080 a 24 fps e inserisce una carta titolo a schermo intero su sfondo nero con tipografia spaziata. È fondamentale passare esplicitamente sia seconds che time per evitare sfasamenti rispetto al playhead (issue #326).",
+        code: JSON.stringify({
+          id: "graphics.newText",
+          params: {
+            text: "QUESTA ESTATE",
+            seconds: 2.5,
+            time: 0,
+            track: "V2",
+            position: [960, 540],
+            size: 96,
+            fontStyle: "Bold"
+          }
+        }, null, 2)
+      },
+      {
+        title: "2. Sviluppo (10–55%): Montaggio Alternato & Ken Burns",
+        badge: "Ritmo: 1.2s – 2.0s / clip",
+        desc: "Colloca le clip su V1 tramite command_batch lasciando almeno 1s di margine (sourceIn >= 254016000000 tick) per consentire le transizioni. Sulle riprese statiche applica un lento zoom (Scale 100% → 112%) tramite effects.setParam con keyframe: true.",
+        code: JSON.stringify({
+          id: "timeline.place",
+          params: {
+            item: 1,
+            track: "V1",
+            seconds: 4.0,
+            sourceIn: 254016000000,
+            duration: 381024000000
+          }
+        }, null, 2)
+      },
+      {
+        title: "3. Climax (55–85%): Tagli Serrati & Lumetri",
+        badge: "Ritmo: 0.6s – 1.0s / clip",
+        desc: "Riduce la durata delle clip sotto il secondo seguendo i picchi della colonna sonora e uniforma il contrasto cinematografico con lumetri.applyPreset o effects.setParam sull'effetto lumetri.",
+        code: JSON.stringify({
+          id: "effects.setParam",
+          params: {
+            effect: "Motion",
+            param: "Scale",
+            value: 112.0,
+            time: 5588352000000,
+            keyframe: true
+          }
+        }, null, 2)
+      },
+      {
+        title: "4. Chiusura (85–100%): Titolo Finale & Export H.264",
+        badge: "Chiusura: Dip to Black",
+        desc: "Posiziona il titolo principale e la data, chiude con Dip to Black e dissolvenza audio esponenziale, quindi esporta in MP4 H.264 passando startSeconds ed endSeconds in camelCase e wait: true.",
+        code: JSON.stringify({
+          id: "file.exportMedia",
+          params: {
+            path: "/percorso/assoluto/trailer_finale.mp4",
+            format: "h264",
+            startSeconds: 0,
+            endSeconds: 120,
+            audio: true,
+            wait: true
+          }
+        }, null, 2)
+      }
+    ];
+
+    function wrapLabel(str) {
+      if (str.length <= 16) return str;
+      const words = str.split(" ");
+      const lines = [];
+      let current = "";
+      words.forEach(w => {
+        if ((current + " " + w).trim().length > 16) {
+          if (current) lines.push(current.trim());
+          current = w;
+        } else {
+          current = (current + " " + w).trim();
+        }
+      });
+      if (current) lines.push(current.trim());
+      return lines;
+    }
+
+    const commonTooltip = {
+      callbacks: {
+        title: function(items) {
+          const raw = items[0].label;
+          return Array.isArray(raw) ? raw.join(" ") : raw;
+        }
+      }
+    };
+
+    let overviewChart = null;
+    function renderOverviewChart(type) {
+      const ctx = document.getElementById("overviewChart").getContext("2d");
+      if (overviewChart) overviewChart.destroy();
+
+      if (type === "memory") {
+        document.getElementById("overview-chart-caption").textContent =
+          "Impatto della limitazione thread e disabilitazione probing GPU (issue #4266 su Linux aarch64).";
+        overviewChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: ["RAM Inattiva (MiB)", "Thread Attivi"].map(wrapLabel),
+            datasets: [
+              {
+                label: "Default (GPU probing attivo)",
+                data: [233.8, 26],
+                backgroundColor: "#D97706",
+                borderRadius: 6
+              },
+              {
+                label: "Ottimizzato (env limitato)",
+                data: [23.8, 5],
+                backgroundColor: "#0F766E",
+                borderRadius: 6
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              tooltip: commonTooltip,
+              legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } }
+            },
+            scales: {
+              y: { beginAtZero: true, grid: { color: "#E7E2DA" } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      } else {
+        document.getElementById("overview-chart-caption").textContent =
+          "Stima rispetto al benchmark Premiere Pro 26.5.2 (repository storytold/filmcraft).";
+        overviewChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: ["Copertura Funzionale", "Maturità Produzione Reale", "Gap Residuo Alpha"].map(wrapLabel),
+            datasets: [
+              {
+                label: "Percentuale (%)",
+                data: [86, 56, 44],
+                backgroundColor: ["#0F766E", "#B45309", "#A8A29E"],
+                borderRadius: 6
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              tooltip: commonTooltip,
+              legend: { display: false }
+            },
+            scales: {
+              y: { beginAtZero: true, max: 100, grid: { color: "#E7E2DA" } },
+              x: { grid: { display: false } }
+            }
+          }
+        });
+      }
+    }
+
+    let trailerChart = null;
+    function renderTrailerChart() {
+      const ctx = document.getElementById("trailerChart").getContext("2d");
+      trailerChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["1. Apertura", "2. Sviluppo", "3. Climax", "4. Chiusura"].map(wrapLabel),
+          datasets: [
+            {
+              label: "Durata media inquadratura (s)",
+              data: [2.5, 1.6, 0.75, 3.0],
+              backgroundColor: ["#B45309", "#0F766E", "#BE123C", "#44403C"],
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            tooltip: commonTooltip,
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: "Secondi per taglio", font: { size: 11 } },
+              grid: { color: "#E7E2DA" }
+            },
+            x: { grid: { display: false } }
+          }
+        }
+      });
+    }
+
+    function updateCreditsCalculator() {
+      const duration = parseInt(document.getElementById("credit-duration").value, 10);
+      const renders = parseInt(document.getElementById("credit-renders").value, 10);
+      const batchStrategy = document.getElementById("credit-batch").value;
+      const modelProfile = document.getElementById("credit-model").value;
+
+      const mins = Math.floor(duration / 60);
+      const secs = (duration % 60).toString().padStart(2, "0");
+      document.getElementById("credit-duration-label").textContent = `${duration}s (${mins}:${secs} min)`;
+      document.getElementById("credit-renders-label").textContent = `${renders} fotogrammi`;
+
+      const estimatedClips = Math.round(duration * 0.46);
+      document.getElementById("credit-clips-output").textContent = `~${estimatedClips}`;
+
+      let baseTurns = 4;
+      if (batchStrategy === "batch") {
+        baseTurns += Math.ceil(estimatedClips / 16) + Math.ceil(renders / 2);
+      } else if (batchStrategy === "mixed") {
+        baseTurns += Math.ceil(estimatedClips / 5) + Math.ceil(renders / 1.5);
+      } else {
+        baseTurns += estimatedClips + renders;
+      }
+
+      const turnsMin = Math.max(5, Math.round(baseTurns * 0.85));
+      const turnsMax = Math.round(baseTurns * 1.2);
+      document.getElementById("credit-turns-output").textContent = `${turnsMin} – ${turnsMax}`;
+
+      const modelMultiplier = modelProfile === "flagship" ? 1.35 : 0.72;
+      const renderCost = renders * (modelProfile === "flagship" ? 0.65 : 0.35);
+
+      const minCredits = Math.max(2, Math.round((turnsMin * 0.65 * modelMultiplier) + renderCost * 0.7));
+      const maxCredits = Math.max(minCredits + 2, Math.round((turnsMax * 0.95 * modelMultiplier) + renderCost * 1.1));
+
+      document.getElementById("credit-range-output").textContent = `${minCredits} – ${maxCredits} crediti`;
+
+      const effEl = document.getElementById("credit-efficiency-output");
+      const adviceEl = document.getElementById("credit-advice-output");
+      if (batchStrategy === "batch" && renders <= 6) {
+        effEl.textContent = "Alta";
+        effEl.className = "text-sm font-bold text-teal-300 mt-0.5";
+        adviceEl.innerHTML = `Ottimo bilanciamento: <code class="bg-stone-800 px-1 rounded text-amber-300">command_batch</code> raggruppa i ~${estimatedClips} tagli in ${turnsMin}–${turnsMax} turni e mantiene basso il costo dei token di contesto.`;
+      } else if (batchStrategy === "single") {
+        effEl.textContent = "Bassa";
+        effEl.className = "text-sm font-bold text-rose-400 mt-0.5";
+        adviceEl.innerHTML = `Attenzione: eseguire <code class="bg-stone-800 px-1 rounded text-amber-300">command_run</code> singolarmente per ${estimatedClips} clip moltiplica i turni chat. Passa a <code class="bg-stone-800 px-1 rounded text-amber-300">command_batch</code> per dimezzare la spesa.`;
+      } else {
+        effEl.textContent = "Media";
+        effEl.className = "text-sm font-bold text-amber-300 mt-0.5";
+        adviceEl.innerHTML = `Buon controllo visivo con ${renders} verifiche <code class="bg-stone-800 px-1 rounded text-amber-300">render_frame</code>. Rinomina i file sorgenti prima dell'import per evitare ulteriori ispezioni visive.`;
+      }
+    }
+
+    function updateMcpConfig() {
+      const os = document.getElementById("cfg-os").value;
+      const mode = document.getElementById("cfg-mode").value;
+      const port = document.getElementById("cfg-port").value || "9876";
+      const lowRam = document.getElementById("cfg-low-ram").checked;
+      const autoApprove = document.getElementById("cfg-autoapprove").checked;
+
+      let binPath = "/usr/local/bin/filmcraft-cli";
+      let appCmd = `filmcraft --control ${port}`;
+      if (os === "windows") {
+        binPath = "C:\\Program Files\\FilmCraft\\filmcraft-cli.exe";
+        appCmd = `"C:\\Program Files\\FilmCraft\\filmcraft.exe" --control ${port}`;
+      } else if (os === "linux") {
+        binPath = "/usr/bin/filmcraft-cli";
+        appCmd = `filmcraft --control ${port}`;
+      }
+
+      let args = ["mcp"];
+      let serverName = "filmcraft-headless";
+      if (mode === "bridge") {
+        args = ["mcp", "--bridge", `127.0.0.1:${port}`];
+        serverName = "filmcraft-bridge";
+        document.getElementById("cmd-output").textContent = `# Avvia prima l'app desktop con porta control attiva:\n${appCmd}`;
+      } else if (mode === "headless-demo") {
+        args = ["mcp", "--demo"];
+        document.getElementById("cmd-output").textContent = `# Nessun comando manuale richiesto: Kiro avvia filmcraft-cli con progetto --demo`;
+      } else {
+        document.getElementById("cmd-output").textContent = `# Nessun comando manuale richiesto: Kiro avvia filmcraft-cli in background`;
+      }
+
+      const serverObj = {
+        command: binPath,
+        args: args,
+        disabled: false
+      };
+
+      if (lowRam) {
+        serverObj.env = {
+          TOKIO_WORKER_THREADS: "1",
+          MALLOC_ARENA_MAX: "1",
+          RAYON_NUM_THREADS: "1",
+          CUDA_VISIBLE_DEVICES: "",
+          LIBVA_DRIVER_NAME: "none"
+        };
+      }
+
+      if (autoApprove) {
+        const safeTools = [
+          "command_list",
+          "doc_inspect",
+          "project_inspect",
+          "sequence_inspect",
+          "render_frame",
+          "render_preview"
+        ];
+        if (mode === "bridge") {
+          safeTools.push("ui_inspect", "ui_screenshot");
+        }
+        serverObj.autoApprove = safeTools;
+      }
+
+      serverObj.timeout = 30000;
+
+      const fullConfig = {
+        mcpServers: {
+          [serverName]: serverObj
+        }
+      };
+
+      document.getElementById("json-output").textContent = JSON.stringify(fullConfig, null, 2);
+    }
+
+    function renderToolsTable() {
+      const query = document.getElementById("tool-search").value.toLowerCase().trim();
+      const filter = document.getElementById("tool-filter").value;
+      const tbody = document.getElementById("tools-tbody");
+
+      const filtered = mcpToolsData.filter(t => {
+        const matchMode = filter === "all" || t.mode === filter;
+        const matchText = !query ||
+          t.name.toLowerCase().includes(query) ||
+          t.category.toLowerCase().includes(query) ||
+          t.desc.toLowerCase().includes(query);
+        return matchMode && matchText;
+      });
+
+      tbody.innerHTML = filtered.map(t => {
+        const badge = t.mode === "both"
+          ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-teal-50 text-teal-800">Headless + Bridge</span>`
+          : `<span class="px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-100 text-amber-900">Solo Bridge GUI</span>`;
+        return `
+          <tr class="hover:bg-stone-50">
+            <td class="px-4 py-3 font-mono font-semibold text-stone-900">${t.name}</td>
+            <td class="px-4 py-3 whitespace-nowrap">${badge}</td>
+            <td class="px-4 py-3 text-stone-600 whitespace-nowrap">${t.category}</td>
+            <td class="px-4 py-3 text-stone-700">${t.desc}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    document.querySelectorAll(".nav-pill").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".nav-pill").forEach(b => {
+          b.classList.remove("active");
+          b.classList.add("text-stone-700");
+        });
+        btn.classList.add("active");
+        btn.classList.remove("text-stone-700");
+
+        const target = btn.getAttribute("data-tab");
+        document.querySelectorAll(".tab-panel").forEach(panel => {
+          panel.classList.toggle("hidden", panel.id !== `tab-${target}`);
+        });
+      });
+    });
+
+    const btnBridge = document.getElementById("btn-mode-bridge");
+    const btnHeadless = document.getElementById("btn-mode-headless");
+    btnBridge.addEventListener("click", () => {
+      btnBridge.className = "px-2.5 py-1 rounded-md bg-white text-stone-900 shadow-sm";
+      btnHeadless.className = "px-2.5 py-1 rounded-md text-stone-600";
+      document.getElementById("arch-cli-cmd").textContent = "mcp --bridge 127.0.0.1:9876";
+      document.getElementById("arch-tool-badge").textContent = "17 Tool MCP esposti";
+      document.getElementById("arch-target-icon").textContent = "🎬";
+      document.getElementById("arch-target-title").textContent = "App GUI + crates/engine";
+      document.getElementById("arch-target-desc").textContent = "TCP JSON-lines su porta 9876 con anteprima visiva live";
+      document.getElementById("arch-render-badge").textContent = "Screenshot Program Monitor";
+      document.getElementById("arch-mode-summary").innerHTML =
+        `<strong>Bridge consigliata per il montaggio creativo:</strong> richiede l'apertura preventiva dell'app desktop con <code class="bg-stone-100 px-1 rounded">filmcraft --control 9876</code>. Ti permette di osservare Kiro mentre costruisce la timeline in tempo reale e abilita gli 8 tool UI (<code class="bg-stone-100 px-1 rounded">ui_inspect</code>, <code class="bg-stone-100 px-1 rounded">ui_screenshot</code>, controlli sintetici). Su macOS disattiva automaticamente <em>App Nap</em>.`;
+    });
+
+    btnHeadless.addEventListener("click", () => {
+      btnHeadless.className = "px-2.5 py-1 rounded-md bg-white text-stone-900 shadow-sm";
+      btnBridge.className = "px-2.5 py-1 rounded-md text-stone-600";
+      document.getElementById("arch-cli-cmd").textContent = "mcp --project p.fcproj";
+      document.getElementById("arch-tool-badge").textContent = "9 Tool Core esposti";
+      document.getElementById("arch-target-icon").textContent = "⚙️";
+      document.getElementById("arch-target-title").textContent = "Motore Rust In-Process";
+      document.getElementById("arch-target-desc").textContent = "Esecuzione in background senza finestra grafica";
+      document.getElementById("arch-render-badge").textContent = "Render PNG Diretto Motore";
+      document.getElementById("arch-mode-summary").innerHTML =
+        `<strong>Headless ideale per automazione batch:</strong> Kiro avvia <code class="bg-stone-100 px-1 rounded">filmcraft-cli mcp</code> in background senza aprire l'interfaccia grafica. Espone i 9 tool principali di ispezione, montaggio ed export, mentre <code class="bg-stone-100 px-1 rounded">render_frame</code> renderizza direttamente i fotogrammi in PNG dal motore.`;
+    });
+
+    document.getElementById("overview-chart-select").addEventListener("change", (e) => {
+      renderOverviewChart(e.target.value);
+    });
+
+    ["cfg-os", "cfg-mode", "cfg-port", "cfg-low-ram", "cfg-autoapprove"].forEach(id => {
+      document.getElementById(id).addEventListener("input", updateMcpConfig);
+      document.getElementById(id).addEventListener("change", updateMcpConfig);
+    });
+
+    ["credit-duration", "credit-renders", "credit-batch", "credit-model"].forEach(id => {
+      document.getElementById(id).addEventListener("input", updateCreditsCalculator);
+      document.getElementById(id).addEventListener("change", updateCreditsCalculator);
+    });
+
+    document.querySelectorAll(".phase-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt(btn.getAttribute("data-phase"), 10);
+        document.querySelectorAll(".phase-btn").forEach(b => {
+          b.className = b.className
+            .replace("border-2 border-amber-600 bg-amber-50", "border border-stone-200 bg-stone-50 hover:bg-stone-100");
+        });
+        btn.className = btn.className
+          .replace("border border-stone-200 bg-stone-50 hover:bg-stone-100", "border-2 border-amber-600 bg-amber-50");
+
+        const p = trailerPhases[idx];
+        document.getElementById("phase-title").textContent = p.title;
+        document.getElementById("phase-pacing-badge").textContent = p.badge;
+        document.getElementById("phase-desc").textContent = p.desc;
+        document.getElementById("phase-code").textContent = p.code;
+      });
+    });
+
+    document.getElementById("calc-seconds").addEventListener("input", (e) => {
+      const sec = parseFloat(e.target.value);
+      document.getElementById("calc-ticks").value = isNaN(sec) ? "0" : Math.round(sec * TICK_PER_SEC).toString();
+    });
+
+    document.getElementById("tool-search").addEventListener("input", renderToolsTable);
+    document.getElementById("tool-filter").addEventListener("change", renderToolsTable);
+
+    document.querySelectorAll(".copy-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const targetId = btn.getAttribute("data-copy");
+        const text = document.getElementById(targetId).textContent;
+        navigator.clipboard.writeText(text).then(() => {
+          const orig = btn.textContent;
+          btn.textContent = "Copiato!";
+          setTimeout(() => { btn.textContent = orig; }, 1500);
+        });
+      });
+    });
+
+    renderOverviewChart("memory");
+    renderTrailerChart();
+    updateCreditsCalculator();
+    updateMcpConfig();
+    document.getElementById("phase-code").textContent = trailerPhases[0].code;
+    renderToolsTable();
+  </script>
+</body>
+</html>
