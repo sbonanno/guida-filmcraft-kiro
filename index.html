@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FilmCraft + Kiro MCP | Guida Interattiva al Montaggio AI</title>
   <!-- Chosen Palette: Warm Editorial Stone & Cinema Amber (Background #FAF8F5, Cards #FFFFFF, Borders #E7E2DA, Text #1C1917, Primary Accent #B45309, Secondary Accent #0F766E) -->
-  <!-- Application Structure Plan: L'applicazione è strutturata in quattro viste navigabili (Dashboard & Architettura, Configuratore mcp.json, Regia Trailer iMovie, Catalogo Tool & Limiti Alpha). Il configuratore macOS è calibrato sul binario reale /Applications/FilmCraft.app/Contents/MacOS/FilmCraft avviato con --control 9876. -->
+  <!-- Application Structure Plan: L'applicazione è strutturata in quattro viste navigabili (Dashboard & Architettura, Configuratore mcp.json, Regia Trailer iMovie, Catalogo Tool & Limiti Alpha). Il configuratore macOS è calibrato sul binario reale /Applications/FilmCraft.app/Contents/MacOS/FilmCraft avviato con --control 9876, con diagnostica errori Kiro MCP ("Failed to list tools"). -->
   <!-- Visualization & Content Choices: 1) Confronto Risorse & Maturità (Chart.js Bar Chart su Canvas) -> Toggle tra Risorse e Maturità. 2) Ritmo Tagli Trailer iMovie (Chart.js Bar Chart su Canvas) -> Clic sulle fasi per aggiornare dettagli comandi JSON. 3) Calcolatore Crediti Kiro + Convertitore Tick -> Input interattivi HTML/JS per stimare turni agentici, clip e consumo crediti. -->
   <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -202,6 +202,23 @@
     </section>
 
     <section id="tab-setup" class="tab-panel hidden space-y-6">
+      <div class="bg-rose-50 border border-rose-200 rounded-2xl p-5 shadow-sm">
+        <div class="flex items-start gap-3">
+          <span class="text-xl">🛠️</span>
+          <div class="space-y-2 text-xs text-rose-950 leading-relaxed">
+            <h3 class="text-sm font-bold text-rose-900">Risoluzione Errore Kiro: "Failed to list tools / Failed to connect to MCP server"</h3>
+            <p>
+              Quando Kiro viene aperto <em>prima</em> che lo script ponte o l'app FilmCraft siano pronti, memorizza lo stato di errore. Dopo aver creato <code class="bg-rose-100 px-1 rounded">~/.kiro/filmcraft_mcp_bridge.py</code> e <code class="bg-rose-100 px-1 rounded">mcp.json</code>:
+            </p>
+            <ol class="list-decimal list-inside space-y-1 font-medium">
+              <li>Verifica nel Terminale che FilmCraft sia in ascolto: <code class="bg-rose-100 px-1.5 py-0.5 rounded font-mono">lsof -i :9876</code> (deve mostrare <code class="bg-rose-100 px-1 rounded">FilmCraft ... LISTEN</code>).</li>
+              <li>In <strong>Kiro IDE</strong>, apri la barra laterale sinistra (icona fantasmino Kiro → sezione <strong>MCP Servers</strong>) e clicca sull'icona di ricarica <strong>↻ (Reconnect)</strong> accanto a <code class="bg-rose-100 px-1 rounded">filmcraft-bridge</code>, oppure premi <code class="bg-rose-100 px-1 rounded">Cmd + Shift + P</code> → <code class="bg-rose-100 px-1 rounded">Kiro: Restart MCP Servers</code>.</li>
+              <li><strong>Attenzione al percorso in mcp.json:</strong> Kiro NON espande sempre <code class="bg-rose-100 px-1 rounded">${HOME}</code> dentro <code class="bg-rose-100 px-1 rounded">args</code>! Usa sempre il percorso assoluto (es. <code class="bg-rose-100 px-1 rounded">/Users/tuo_utente/.kiro/filmcraft_mcp_bridge.py</code>). Il generatore qui sotto lo imposta automaticamente.</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+
       <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
         <h2 class="text-lg font-bold text-stone-900">Generatore Configurazione Kiro MCP</h2>
         <p class="text-sm text-stone-600 mt-2 leading-relaxed">
@@ -228,9 +245,15 @@
               </select>
             </div>
 
-            <div>
-              <label for="cfg-port" class="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1.5">Porta TCP Control (solo Bridge)</label>
-              <input id="cfg-port" type="number" value="9876" min="1024" max="65535" class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900">
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label for="cfg-port" class="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1.5">Porta TCP</label>
+                <input id="cfg-port" type="number" value="9876" min="1024" max="65535" class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900">
+              </div>
+              <div>
+                <label for="cfg-user" class="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1.5">Nome Utente Mac</label>
+                <input id="cfg-user" type="text" value="luca" placeholder="es. mario" class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 font-mono">
+              </div>
             </div>
 
             <div class="space-y-2.5 pt-2 border-t border-stone-200">
@@ -252,34 +275,34 @@
             </div>
 
             <div class="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-950">
-              <strong>Nota sul tuo Mac:</strong> <code class="bg-amber-100 px-1 rounded">FilmCraft.app</code> non include <code class="bg-amber-100 px-1 rounded">filmcraft-cli</code>. L'opzione <strong>Bridge Zero-CLI</strong> usa <code class="bg-amber-100 px-1 rounded">python3</code> già presente su macOS per esporre i 17 tool MCP collegandosi direttamente alla porta <code class="bg-amber-100 px-1 rounded">9876</code> di <code class="bg-amber-100 px-1 rounded">FilmCraft.app</code>!
+              <strong>Perché questo ponte funziona subito:</strong> lo script Python risponde istantaneamente a <code class="bg-amber-100 px-1 rounded">initialize</code> e <code class="bg-amber-100 px-1 rounded">tools/list</code> senza bloccarsi, poi inoltra ogni chiamata <code class="bg-amber-100 px-1 rounded">tools/call</code> al server TCP JSON-lines di <code class="bg-amber-100 px-1 rounded">FilmCraft.app</code> sulla porta <code class="bg-amber-100 px-1 rounded">9876</code>.
             </div>
           </div>
 
           <div class="lg:col-span-7 space-y-4">
             <div class="bg-stone-900 text-stone-100 rounded-xl p-4 border border-stone-800">
               <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-mono text-stone-400">1. Avvio da Terminale (+ eventuale script ponte)</span>
+                <span class="text-xs font-mono text-stone-400">1. Esegui nel Terminale Mac (crea ponte + avvia FilmCraft)</span>
                 <button type="button" data-copy="cmd-output" class="copy-btn text-xs px-2.5 py-1 rounded bg-stone-800 hover:bg-stone-700 text-stone-200 transition">
                   Copia comando
                 </button>
               </div>
-              <pre id="cmd-output" class="text-xs font-mono text-emerald-300 overflow-x-auto code-scroll py-1"></pre>
+              <pre id="cmd-output" class="text-xs font-mono text-emerald-300 overflow-x-auto code-scroll py-1 max-h-64"></pre>
             </div>
 
             <div class="bg-stone-900 text-stone-100 rounded-xl p-4 border border-stone-800">
               <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-mono text-stone-400">2. .kiro/settings/mcp.json</span>
+                <span class="text-xs font-mono text-stone-400">2. Incolla in ~/.kiro/settings/mcp.json (o .kiro/settings/mcp.json)</span>
                 <button type="button" data-copy="json-output" class="copy-btn text-xs px-2.5 py-1 rounded bg-amber-700 hover:bg-amber-600 text-white font-medium transition">
                   Copia JSON
                 </button>
               </div>
-              <pre id="json-output" class="text-xs font-mono text-stone-100 overflow-x-auto code-scroll max-h-80 leading-relaxed"></pre>
+              <pre id="json-output" class="text-xs font-mono text-stone-100 overflow-x-auto code-scroll max-h-64 leading-relaxed"></pre>
             </div>
 
             <div class="bg-stone-50 p-4 rounded-xl border border-stone-200 text-xs text-stone-700 space-y-1.5">
-              <p><strong>Gerarchia precedenza in Kiro:</strong> Configurazione Agente &gt; Workspace (<code class="bg-white px-1 rounded">.kiro/settings/mcp.json</code>) &gt; Utente (<code class="bg-white px-1 rounded">~/.kiro/settings/mcp.json</code>).</p>
-              <p><strong>Tool Search automatico:</strong> Attivo di default in Kiro IDE 1.3+ e Kiro CLI 2.31+ (V3), carica gli schemi dei 17 tool on-demand senza saturare il contesto.</p>
+              <p><strong>Test rapido nel Terminale:</strong> per verificare che il ponte risponda correttamente a Kiro prima ancora di riavviare l'IDE, esegui:<br>
+              <code class="bg-white px-1.5 py-0.5 rounded border border-stone-200 font-mono text-[11px] inline-block mt-1">echo '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' | python3 ~/.kiro/filmcraft_mcp_bridge.py</code></p>
             </div>
           </div>
         </div>
@@ -858,6 +881,7 @@ Importa i file video in /percorso/copia_clip e la traccia /percorso/musica.wav. 
       const os = document.getElementById("cfg-os").value;
       const mode = document.getElementById("cfg-mode").value;
       const port = document.getElementById("cfg-port").value || "9876";
+      const macUser = (document.getElementById("cfg-user").value || "luca").trim();
       const lowRam = document.getElementById("cfg-low-ram").checked;
       const autoApprove = document.getElementById("cfg-autoapprove").checked;
 
@@ -876,11 +900,82 @@ Importa i file video in /percorso/copia_clip e la traccia /percorso/musica.wav. 
 
       if (mode === "bridge-python") {
         serverName = "filmcraft-bridge";
+        const bridgeScriptPath = os === "macos"
+          ? `/Users/${macUser}/.kiro/filmcraft_mcp_bridge.py`
+          : `/home/${macUser}/.kiro/filmcraft_mcp_bridge.py`;
+
         document.getElementById("cmd-output").textContent =
-          `# 1. Avvia FilmCraft.app con il server di controllo TCP attivo:\n${appCmd} &\n\n# 2. Crea il ponte stdio <-> TCP (salvalo una sola volta in ~/.kiro/filmcraft_mcp_bridge.py):\ncat << 'EOF' > ~/.kiro/filmcraft_mcp_bridge.py\nimport sys, json, socket\n\nPORT = ${port}\nTOOLS = [\n  {"name":"command_list","description":"Elenca i >650 comandi FilmCraft (opzionale filter)","inputSchema":{"type":"object","properties":{"filter":{"type":"string"}}}},\n  {"name":"command_run","description":"Esegue un comando {id, params}","inputSchema":{"type":"object","properties":{"id":{"type":"string"},"params":{"type":"object"}},"required":["id"]}},\n  {"name":"command_batch","description":"Esegue in sequenza steps: [{id, params}]","inputSchema":{"type":"object","properties":{"steps":{"type":"array"},"stop_on_error":{"type":"boolean"}},"required":["steps"]}},\n  {"name":"doc_inspect","description":"Ispeziona intero progetto e sequenza","inputSchema":{"type":"object","properties":{}}},\n  {"name":"project_inspect","description":"Legge bin e media importati","inputSchema":{"type":"object","properties":{}}},\n  {"name":"sequence_inspect","description":"Legge tracce, clip in tick ed effetti","inputSchema":{"type":"object","properties":{}}},\n  {"name":"media_import","description":"Importa percorsi file nel progetto","inputSchema":{"type":"object","properties":{"paths":{"type":"array","items":{"type":"string"}}},"required":["paths"]}},\n  {"name":"render_frame","description":"Salva PNG al timestamp seconds","inputSchema":{"type":"object","properties":{"seconds":{"type":"number"},"path":{"type":"string"}},"required":["seconds","path"]}},\n  {"name":"ui_inspect","description":"Stato interfaccia GUI","inputSchema":{"type":"object","properties":{}}},\n  {"name":"ui_screenshot","description":"Screenshot finestra o pannello","inputSchema":{"type":"object","properties":{"path":{"type":"string"}},"required":["path"]}}\n]\n\ndef send_tcp(method, params=None):\n    with socket.create_connection(("127.0.0.1", PORT), timeout=30) as s:\n        req = json.dumps({"id": 1, "method": method, "params": params or {}}) + "\\n"\n        s.sendall(req.encode())\n        f = s.makefile("r", encoding="utf-8")\n        return json.loads(f.readline())\n\nfor line in sys.stdin:\n    msg = json.loads(line)\n    mid, method = msg.get("id"), msg.get("method")\n    if method == "initialize":\n        res = {"protocolVersion":"2024-11-05","capabilities":{"tools":{}},"serverInfo":{"name":"filmcraft-mac-bridge","version":"1.0"}}\n    elif method == "notifications/initialized":\n        continue\n    elif method == "tools/list":\n        res = {"tools": TOOLS}\n    elif method == "tools/call":\n        tname = msg["params"]["name"]\n        targs = msg["params"].get("arguments", {})\n        tcp_res = send_tcp(tname, targs)\n        res = {"content": [{"type": "text", "text": json.dumps(tcp_res.get("result", tcp_res))}]}\n    else:\n        res = {}\n    sys.stdout.write(json.dumps({"jsonrpc": "2.0", "id": mid, "result": res}) + "\\n")\n    sys.stdout.flush()\nEOF`;
+`# 1. Crea la cartella ~/.kiro e lo script ponte stdio <-> TCP (usando python3 di sistema):
+mkdir -p ~/.kiro
+cat << 'EOF' > ~/.kiro/filmcraft_mcp_bridge.py
+import sys, json, socket
+
+PORT = ${port}
+TOOLS = [
+  {"name":"command_list","description":"Elenca i >650 comandi FilmCraft (opzionale filter)","inputSchema":{"type":"object","properties":{"filter":{"type":"string"}}}},
+  {"name":"command_run","description":"Esegue un comando {id, params}","inputSchema":{"type":"object","properties":{"id":{"type":"string"},"params":{"type":"object"}},"required":["id"]}},
+  {"name":"command_batch","description":"Esegue in sequenza steps: [{id, params}]","inputSchema":{"type":"object","properties":{"steps":{"type":"array"},"stop_on_error":{"type":"boolean"}},"required":["steps"]}},
+  {"name":"doc_inspect","description":"Ispeziona intero progetto e sequenza","inputSchema":{"type":"object","properties":{}}},
+  {"name":"project_inspect","description":"Legge bin e media importati","inputSchema":{"type":"object","properties":{}}},
+  {"name":"sequence_inspect","description":"Legge tracce, clip in tick ed effetti","inputSchema":{"type":"object","properties":{}}},
+  {"name":"media_import","description":"Importa percorsi file nel progetto","inputSchema":{"type":"object","properties":{"paths":{"type":"array","items":{"type":"string"}}},"required":["paths"]}},
+  {"name":"render_frame","description":"Salva PNG al timestamp seconds","inputSchema":{"type":"object","properties":{"seconds":{"type":"number"},"path":{"type":"string"}},"required":["seconds","path"]}},
+  {"name":"ui_inspect","description":"Stato interfaccia GUI","inputSchema":{"type":"object","properties":{}}},
+  {"name":"ui_screenshot","description":"Screenshot finestra o pannello","inputSchema":{"type":"object","properties":{"path":{"type":"string"}},"required":["path"]}}
+]
+
+def send_tcp(method, params=None):
+    try:
+        with socket.create_connection(("127.0.0.1", PORT), timeout=30) as s:
+            req = json.dumps({"id": 1, "method": method, "params": params or {}}) + "\\n"
+            s.sendall(req.encode("utf-8"))
+            f = s.makefile("r", encoding="utf-8")
+            line = f.readline()
+            return json.loads(line) if line else {"error": "Risposta vuota da FilmCraft"}
+    except Exception as e:
+        return {"error": f"FilmCraft non raggiungibile su 127.0.0.1:{PORT} ({e}). Avvia FilmCraft con --control {PORT}"}
+
+for raw in sys.stdin:
+    raw = raw.strip()
+    if not raw:
+        continue
+    msg = json.loads(raw)
+    mid = msg.get("id")
+    method = msg.get("method", "")
+    if method == "initialize":
+        res = {
+            "protocolVersion": "2024-11-05",
+            "capabilities": {"tools": {}},
+            "serverInfo": {"name": "filmcraft-bridge", "version": "1.0.0"}
+        }
+    elif method.startswith("notifications/"):
+        continue
+    elif method == "ping":
+        res = {}
+    elif method == "tools/list":
+        res = {"tools": TOOLS}
+    elif method == "tools/call":
+        tname = msg["params"]["name"]
+        targs = msg["params"].get("arguments", {})
+        tcp_res = send_tcp(tname, targs)
+        is_err = "error" in tcp_res
+        payload = tcp_res.get("error") if is_err else tcp_res.get("result", tcp_res)
+        res = {
+            "content": [{"type": "text", "text": json.dumps(payload, ensure_ascii=False)}],
+            "isError": is_err
+        }
+    else:
+        res = {}
+    if mid is not None:
+        sys.stdout.write(json.dumps({"jsonrpc": "2.0", "id": mid, "result": res}) + "\\n")
+        sys.stdout.flush()
+EOF
+
+# 2. Avvia FilmCraft.app con il server di controllo TCP sulla porta ${port}:
+${appCmd} &`;
         serverObj = {
-          command: "python3",
-          args: ["-u", "${HOME}/.kiro/filmcraft_mcp_bridge.py"],
+          command: "/usr/bin/python3",
+          args: ["-u", bridgeScriptPath],
           disabled: false
         };
       } else if (mode === "bridge") {
@@ -1014,7 +1109,7 @@ Importa i file video in /percorso/copia_clip e la traccia /percorso/musica.wav. 
       renderOverviewChart(e.target.value);
     });
 
-    ["cfg-os", "cfg-mode", "cfg-port", "cfg-low-ram", "cfg-autoapprove"].forEach(id => {
+    ["cfg-os", "cfg-mode", "cfg-port", "cfg-user", "cfg-low-ram", "cfg-autoapprove"].forEach(id => {
       document.getElementById(id).addEventListener("input", updateMcpConfig);
       document.getElementById(id).addEventListener("change", updateMcpConfig);
     });
