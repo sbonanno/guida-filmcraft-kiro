@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FilmCraft + Kiro MCP | Guida Interattiva al Montaggio AI</title>
   <!-- Chosen Palette: Warm Editorial Stone & Cinema Amber (Background #FAF8F5, Cards #FFFFFF, Borders #E7E2DA, Text #1C1917, Primary Accent #B45309, Secondary Accent #0F766E) -->
-  <!-- Application Structure Plan: L'applicazione è strutturata in quattro viste navigabili (Dashboard & Architettura, Configuratore mcp.json, Regia Trailer iMovie, Catalogo Tool & Limiti Alpha). Nella sezione Regia Trailer iMovie è integrato sia il simulatore ritmico 0-40s sia un calcolatore interattivo di stima dei crediti Kiro che mostra l'impatto dell'uso di command_batch e render_frame rispetto alla durata del video. -->
+  <!-- Application Structure Plan: L'applicazione è strutturata in quattro viste navigabili (Dashboard & Architettura, Configuratore mcp.json, Regia Trailer iMovie, Catalogo Tool & Limiti Alpha). Il configuratore macOS è calibrato sul binario reale /Applications/FilmCraft.app/Contents/MacOS/FilmCraft avviato con --control 9876. -->
   <!-- Visualization & Content Choices: 1) Confronto Risorse & Maturità (Chart.js Bar Chart su Canvas) -> Toggle tra Risorse e Maturità. 2) Ritmo Tagli Trailer iMovie (Chart.js Bar Chart su Canvas) -> Clic sulle fasi per aggiornare dettagli comandi JSON. 3) Calcolatore Crediti Kiro + Convertitore Tick -> Input interattivi HTML/JS per stimare turni agentici, clip e consumo crediti. -->
   <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -107,7 +107,7 @@
       <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
         <h2 class="text-lg font-bold text-stone-900">Come funziona il collegamento tra Kiro e FilmCraft</h2>
         <p class="text-sm text-stone-600 mt-2 leading-relaxed">
-          Questa sezione illustra l'architettura <em>engine-first</em> di FilmCraft e le due modalità operative disponibili per collegarlo a <strong>Kiro IDE</strong> e <strong>Kiro CLI</strong> tramite il server MCP locale <code class="bg-stone-100 px-1.5 py-0.5 rounded text-stone-800">filmcraft-cli mcp</code>. Puoi alternare tra la modalità <strong>Bridge</strong> e <strong>Headless</strong> per confrontarne requisiti, tool disponibili e casi d'uso, nonché analizzare l'impatto sulla memoria di sistema.
+          Questa sezione illustra l'architettura <em>engine-first</em> di FilmCraft e le due modalità operative disponibili per collegarlo a <strong>Kiro IDE</strong> e <strong>Kiro CLI</strong>. Su macOS il bundle <code class="bg-stone-100 px-1.5 py-0.5 rounded text-stone-800">/Applications/FilmCraft.app/Contents/MacOS/FilmCraft</code> espone la porta di controllo TCP <code class="bg-stone-100 px-1.5 py-0.5 rounded text-stone-800">--control 9876</code> (modalità Bridge), mentre il binario separato <code class="bg-stone-100 px-1.5 py-0.5 rounded text-stone-800">filmcraft-cli</code> gestisce il protocollo MCP su <code class="bg-stone-100 px-1.5 py-0.5 rounded text-stone-800">stdio</code>.
         </p>
 
         <div class="mt-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
@@ -130,21 +130,21 @@
 
               <div class="bg-amber-50/80 p-3.5 rounded-xl border border-amber-200 flex flex-col justify-between">
                 <div class="text-2xl">⚡</div>
-                <div class="font-semibold text-sm text-amber-950 mt-1">filmcraft-cli mcp</div>
+                <div class="font-semibold text-sm text-amber-950 mt-1">Bridge MCP / CLI</div>
                 <p id="arch-cli-cmd" class="text-xs font-mono text-amber-900 mt-1 break-all">mcp --bridge 127.0.0.1:9876</p>
                 <span id="arch-tool-badge" class="mt-2 inline-block text-[11px] px-2 py-0.5 rounded bg-amber-200/70 text-amber-950 font-medium">17 Tool MCP esposti</span>
               </div>
 
               <div class="bg-white p-3.5 rounded-xl border border-stone-200 flex flex-col justify-between">
                 <div id="arch-target-icon" class="text-2xl">🎬</div>
-                <div id="arch-target-title" class="font-semibold text-sm text-stone-900 mt-1">App GUI + crates/engine</div>
+                <div id="arch-target-title" class="font-semibold text-sm text-stone-900 mt-1">FilmCraft.app + Engine</div>
                 <p id="arch-target-desc" class="text-xs text-stone-500 mt-1">TCP JSON-lines su porta 9876 con anteprima visiva live</p>
                 <span id="arch-render-badge" class="mt-2 inline-block text-[11px] px-2 py-0.5 rounded bg-teal-50 text-teal-800">Screenshot Program Monitor</span>
               </div>
             </div>
 
             <div id="arch-mode-summary" class="bg-white p-3.5 rounded-xl border border-stone-200 text-xs text-stone-700 leading-relaxed">
-              <strong>Bridge consigliata per il montaggio creativo:</strong> richiede l'apertura preventiva dell'app desktop con <code class="bg-stone-100 px-1 rounded">filmcraft --control 9876</code>. Ti permette di osservare Kiro mentre costruisce la timeline in tempo reale e abilita gli 8 tool UI (<code class="bg-stone-100 px-1 rounded">ui_inspect</code>, <code class="bg-stone-100 px-1 rounded">ui_screenshot</code>, controlli sintetici). Su macOS disattiva automaticamente <em>App Nap</em>.
+              <strong>Bridge consigliata su macOS:</strong> il pacchetto <code class="bg-stone-100 px-1 rounded">FilmCraft.app</code> contiene l'eseguibile <code class="bg-stone-100 px-1 rounded">/Applications/FilmCraft.app/Contents/MacOS/FilmCraft</code>. Avviandolo con <code class="bg-stone-100 px-1 rounded">--control 9876</code>, osservi Kiro mentre costruisce la timeline in tempo reale con tutti i 17 tool (inclusi i controlli UI) e disattiva automaticamente <em>App Nap</em>.
             </div>
           </div>
 
@@ -205,7 +205,7 @@
       <div class="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm">
         <h2 class="text-lg font-bold text-stone-900">Generatore Configurazione Kiro MCP</h2>
         <p class="text-sm text-stone-600 mt-2 leading-relaxed">
-          Seleziona il tuo sistema operativo, la modalità di collegamento e le opzioni di ottimizzazione per generare immediatamente il file <code class="bg-stone-100 px-1.5 py-0.5 rounded">.kiro/settings/mcp.json</code> (oppure globale <code class="bg-stone-100 px-1.5 py-0.5 rounded">~/.kiro/settings/mcp.json</code>) pronto da incollare in Kiro IDE o Kiro CLI.
+          Seleziona il tuo sistema operativo e la modalità di collegamento per generare sia il comando di avvio dell'app desktop (calibrato su <code class="bg-stone-100 px-1.5 py-0.5 rounded">/Applications/FilmCraft.app/Contents/MacOS/FilmCraft</code> su macOS) sia il file <code class="bg-stone-100 px-1.5 py-0.5 rounded">.kiro/settings/mcp.json</code>.
         </p>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">
@@ -213,7 +213,7 @@
             <div>
               <label for="cfg-os" class="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1.5">Sistema Operativo</label>
               <select id="cfg-os" class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900">
-                <option value="macos">macOS (Apple Silicon / Intel)</option>
+                <option value="macos">macOS (/Applications/FilmCraft.app)</option>
                 <option value="windows">Windows (.msi installer)</option>
                 <option value="linux">Linux / FreeBSD (.deb / .rpm)</option>
               </select>
@@ -222,9 +222,9 @@
             <div>
               <label for="cfg-mode" class="block text-xs font-bold uppercase tracking-wider text-stone-600 mb-1.5">Modalità di Connessione</label>
               <select id="cfg-mode" class="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900">
-                <option value="bridge">Bridge (GUI aperta su porta 9876)</option>
-                <option value="headless">Headless (Background senza finestra)</option>
-                <option value="headless-demo">Headless con progetto --demo</option>
+                <option value="bridge-python">Bridge macOS Zero-CLI (Python stdio → TCP 9876)</option>
+                <option value="bridge">Bridge con binario filmcraft-cli</option>
+                <option value="headless">Headless (Richiede binario filmcraft-cli)</option>
               </select>
             </div>
 
@@ -238,7 +238,7 @@
                 <input id="cfg-low-ram" type="checkbox" class="mt-0.5 rounded border-stone-300 text-amber-700 focus:ring-amber-600">
                 <span class="text-xs text-stone-700">
                   <strong>Riduci RAM inattiva (~23,8 MiB)</strong><br>
-                  Limita thread Tokio/Rayon e disabilita probing GPU CUDA/VAAPI all'avvio.
+                  Limita thread Tokio/Rayon e disabilita probing GPU CUDA/VAAPI.
                 </span>
               </label>
 
@@ -252,14 +252,14 @@
             </div>
 
             <div class="p-3 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-950">
-              <strong>Nota Sicurezza:</strong> <code class="bg-amber-100 px-1 rounded">filmcraft-cli mcp</code> ignora flag come <code class="bg-amber-100 px-1 rounded">--automation-read-root</code>. Attiva <code class="bg-amber-100 px-1 rounded">mcpSandboxing</code> nelle impostazioni di Kiro.
+              <strong>Nota sul tuo Mac:</strong> <code class="bg-amber-100 px-1 rounded">FilmCraft.app</code> non include <code class="bg-amber-100 px-1 rounded">filmcraft-cli</code>. L'opzione <strong>Bridge Zero-CLI</strong> usa <code class="bg-amber-100 px-1 rounded">python3</code> già presente su macOS per esporre i 17 tool MCP collegandosi direttamente alla porta <code class="bg-amber-100 px-1 rounded">9876</code> di <code class="bg-amber-100 px-1 rounded">FilmCraft.app</code>!
             </div>
           </div>
 
           <div class="lg:col-span-7 space-y-4">
             <div class="bg-stone-900 text-stone-100 rounded-xl p-4 border border-stone-800">
               <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-mono text-stone-400">1. Avvio da Terminale</span>
+                <span class="text-xs font-mono text-stone-400">1. Avvio da Terminale (+ eventuale script ponte)</span>
                 <button type="button" data-copy="cmd-output" class="copy-btn text-xs px-2.5 py-1 rounded bg-stone-800 hover:bg-stone-700 text-stone-200 transition">
                   Copia comando
                 </button>
@@ -483,7 +483,7 @@ description: Regole e comandi FilmCraft MCP per montare trailer brevi e dinamici
               </button>
             </div>
             <pre id="prompt-code" class="bg-white/90 text-stone-800 p-3.5 rounded-xl border border-amber-200 text-xs whitespace-pre-wrap leading-relaxed">#imovie-trailer
-Importa i file video in /percorso/copia_clip e la traccia /percorso/musica.wav. Crea una sequenza 1920x1080 a 24 fps chiamata Trailer_Viaggio e monta un trailer in stile iMovie di circa 2 minuti usando command_batch per posizionare clip, carte titolo ("UN NUOVO INIZIO", "OLTRE L'ORIZZONTE", "LA SFIDA", "AUTUNNO 2026"), movimento Ken Burns e color grading Lumetri. Chiudi con Dip to Black e dissolvenza audio, poi mostrami 5 fotogrammi chiave con render_frame prima dell'export H.264.</pre>
+Importa i file video in /percorso/copia_clip e la traccia /percorso/musica.wav. Crea una sequenza 1920x1080 a 24 fps chiamata Trailer_Estate_2026 e monta un trailer in stile iMovie di circa 2 minuti usando command_batch per posizionare clip, carte titolo ("UN NUOVO INIZIO", "OLTRE L'ORIZZONTE", "LA SFIDA", "ESTATE 2026"), movimento Ken Burns e color grading Lumetri. Chiudi con Dip to Black e dissolvenza audio, poi mostrami 5 fotogrammi chiave con render_frame prima dell'export H.264.</pre>
           </div>
         </div>
       </div>
@@ -862,7 +862,7 @@ Importa i file video in /percorso/copia_clip e la traccia /percorso/musica.wav. 
       const autoApprove = document.getElementById("cfg-autoapprove").checked;
 
       let binPath = "/usr/local/bin/filmcraft-cli";
-      let appCmd = `filmcraft --control ${port}`;
+      let appCmd = `/Applications/FilmCraft.app/Contents/MacOS/FilmCraft --control ${port}`;
       if (os === "windows") {
         binPath = "C:\\Program Files\\FilmCraft\\filmcraft-cli.exe";
         appCmd = `"C:\\Program Files\\FilmCraft\\filmcraft.exe" --control ${port}`;
@@ -871,24 +871,35 @@ Importa i file video in /percorso/copia_clip e la traccia /percorso/musica.wav. 
         appCmd = `filmcraft --control ${port}`;
       }
 
-      let args = ["mcp"];
-      let serverName = "filmcraft-headless";
-      if (mode === "bridge") {
-        args = ["mcp", "--bridge", `127.0.0.1:${port}`];
+      let serverObj = {};
+      let serverName = "filmcraft-bridge";
+
+      if (mode === "bridge-python") {
+        serverName = "filmcraft-bridge";
+        document.getElementById("cmd-output").textContent =
+          `# 1. Avvia FilmCraft.app con il server di controllo TCP attivo:\n${appCmd} &\n\n# 2. Crea il ponte stdio <-> TCP (salvalo una sola volta in ~/.kiro/filmcraft_mcp_bridge.py):\ncat << 'EOF' > ~/.kiro/filmcraft_mcp_bridge.py\nimport sys, json, socket\n\nPORT = ${port}\nTOOLS = [\n  {"name":"command_list","description":"Elenca i >650 comandi FilmCraft (opzionale filter)","inputSchema":{"type":"object","properties":{"filter":{"type":"string"}}}},\n  {"name":"command_run","description":"Esegue un comando {id, params}","inputSchema":{"type":"object","properties":{"id":{"type":"string"},"params":{"type":"object"}},"required":["id"]}},\n  {"name":"command_batch","description":"Esegue in sequenza steps: [{id, params}]","inputSchema":{"type":"object","properties":{"steps":{"type":"array"},"stop_on_error":{"type":"boolean"}},"required":["steps"]}},\n  {"name":"doc_inspect","description":"Ispeziona intero progetto e sequenza","inputSchema":{"type":"object","properties":{}}},\n  {"name":"project_inspect","description":"Legge bin e media importati","inputSchema":{"type":"object","properties":{}}},\n  {"name":"sequence_inspect","description":"Legge tracce, clip in tick ed effetti","inputSchema":{"type":"object","properties":{}}},\n  {"name":"media_import","description":"Importa percorsi file nel progetto","inputSchema":{"type":"object","properties":{"paths":{"type":"array","items":{"type":"string"}}},"required":["paths"]}},\n  {"name":"render_frame","description":"Salva PNG al timestamp seconds","inputSchema":{"type":"object","properties":{"seconds":{"type":"number"},"path":{"type":"string"}},"required":["seconds","path"]}},\n  {"name":"ui_inspect","description":"Stato interfaccia GUI","inputSchema":{"type":"object","properties":{}}},\n  {"name":"ui_screenshot","description":"Screenshot finestra o pannello","inputSchema":{"type":"object","properties":{"path":{"type":"string"}},"required":["path"]}}\n]\n\ndef send_tcp(method, params=None):\n    with socket.create_connection(("127.0.0.1", PORT), timeout=30) as s:\n        req = json.dumps({"id": 1, "method": method, "params": params or {}}) + "\\n"\n        s.sendall(req.encode())\n        f = s.makefile("r", encoding="utf-8")\n        return json.loads(f.readline())\n\nfor line in sys.stdin:\n    msg = json.loads(line)\n    mid, method = msg.get("id"), msg.get("method")\n    if method == "initialize":\n        res = {"protocolVersion":"2024-11-05","capabilities":{"tools":{}},"serverInfo":{"name":"filmcraft-mac-bridge","version":"1.0"}}\n    elif method == "notifications/initialized":\n        continue\n    elif method == "tools/list":\n        res = {"tools": TOOLS}\n    elif method == "tools/call":\n        tname = msg["params"]["name"]\n        targs = msg["params"].get("arguments", {})\n        tcp_res = send_tcp(tname, targs)\n        res = {"content": [{"type": "text", "text": json.dumps(tcp_res.get("result", tcp_res))}]}\n    else:\n        res = {}\n    sys.stdout.write(json.dumps({"jsonrpc": "2.0", "id": mid, "result": res}) + "\\n")\n    sys.stdout.flush()\nEOF`;
+        serverObj = {
+          command: "python3",
+          args: ["-u", "${HOME}/.kiro/filmcraft_mcp_bridge.py"],
+          disabled: false
+        };
+      } else if (mode === "bridge") {
         serverName = "filmcraft-bridge";
         document.getElementById("cmd-output").textContent = `# Avvia prima l'app desktop con porta control attiva:\n${appCmd}`;
-      } else if (mode === "headless-demo") {
-        args = ["mcp", "--demo"];
-        document.getElementById("cmd-output").textContent = `# Nessun comando manuale richiesto: Kiro avvia filmcraft-cli con progetto --demo`;
+        serverObj = {
+          command: binPath,
+          args: ["mcp", "--bridge", `127.0.0.1:${port}`],
+          disabled: false
+        };
       } else {
-        document.getElementById("cmd-output").textContent = `# Nessun comando manuale richiesto: Kiro avvia filmcraft-cli in background`;
+        serverName = "filmcraft-headless";
+        document.getElementById("cmd-output").textContent = `# Richiede il binario filmcraft-cli installato separatamente (non incluso in FilmCraft.app)`;
+        serverObj = {
+          command: binPath,
+          args: ["mcp"],
+          disabled: false
+        };
       }
-
-      const serverObj = {
-        command: binPath,
-        args: args,
-        disabled: false
-      };
 
       if (lowRam) {
         serverObj.env = {
@@ -909,7 +920,7 @@ Importa i file video in /percorso/copia_clip e la traccia /percorso/musica.wav. 
           "render_frame",
           "render_preview"
         ];
-        if (mode === "bridge") {
+        if (mode !== "headless") {
           safeTools.push("ui_inspect", "ui_screenshot");
         }
         serverObj.autoApprove = safeTools;
@@ -979,11 +990,11 @@ Importa i file video in /percorso/copia_clip e la traccia /percorso/musica.wav. 
       document.getElementById("arch-cli-cmd").textContent = "mcp --bridge 127.0.0.1:9876";
       document.getElementById("arch-tool-badge").textContent = "17 Tool MCP esposti";
       document.getElementById("arch-target-icon").textContent = "🎬";
-      document.getElementById("arch-target-title").textContent = "App GUI + crates/engine";
+      document.getElementById("arch-target-title").textContent = "FilmCraft.app + Engine";
       document.getElementById("arch-target-desc").textContent = "TCP JSON-lines su porta 9876 con anteprima visiva live";
       document.getElementById("arch-render-badge").textContent = "Screenshot Program Monitor";
       document.getElementById("arch-mode-summary").innerHTML =
-        `<strong>Bridge consigliata per il montaggio creativo:</strong> richiede l'apertura preventiva dell'app desktop con <code class="bg-stone-100 px-1 rounded">filmcraft --control 9876</code>. Ti permette di osservare Kiro mentre costruisce la timeline in tempo reale e abilita gli 8 tool UI (<code class="bg-stone-100 px-1 rounded">ui_inspect</code>, <code class="bg-stone-100 px-1 rounded">ui_screenshot</code>, controlli sintetici). Su macOS disattiva automaticamente <em>App Nap</em>.`;
+        `<strong>Bridge consigliata su macOS:</strong> il pacchetto <code class="bg-stone-100 px-1 rounded">FilmCraft.app</code> contiene l'eseguibile <code class="bg-stone-100 px-1 rounded">/Applications/FilmCraft.app/Contents/MacOS/FilmCraft</code>. Avviandolo con <code class="bg-stone-100 px-1 rounded">--control 9876</code>, osservi Kiro mentre costruisce la timeline in tempo reale con tutti i 17 tool (inclusi i controlli UI) e disattiva automaticamente <em>App Nap</em>.`;
     });
 
     btnHeadless.addEventListener("click", () => {
@@ -993,10 +1004,10 @@ Importa i file video in /percorso/copia_clip e la traccia /percorso/musica.wav. 
       document.getElementById("arch-tool-badge").textContent = "9 Tool Core esposti";
       document.getElementById("arch-target-icon").textContent = "⚙️";
       document.getElementById("arch-target-title").textContent = "Motore Rust In-Process";
-      document.getElementById("arch-target-desc").textContent = "Esecuzione in background senza finestra grafica";
+      document.getElementById("arch-target-desc").textContent = "Richiede binario filmcraft-cli separato";
       document.getElementById("arch-render-badge").textContent = "Render PNG Diretto Motore";
       document.getElementById("arch-mode-summary").innerHTML =
-        `<strong>Headless ideale per automazione batch:</strong> Kiro avvia <code class="bg-stone-100 px-1 rounded">filmcraft-cli mcp</code> in background senza aprire l'interfaccia grafica. Espone i 9 tool principali di ispezione, montaggio ed export, mentre <code class="bg-stone-100 px-1 rounded">render_frame</code> renderizza direttamente i fotogrammi in PNG dal motore.`;
+        `<strong>Headless ideale per automazione batch:</strong> richiede l'installazione del binario separato <code class="bg-stone-100 px-1 rounded">filmcraft-cli</code> (non incluso nel pacchetto macOS <code class="bg-stone-100 px-1 rounded">FilmCraft.app</code>). Espone i 9 tool principali di ispezione, montaggio ed export senza finestra grafica.`;
     });
 
     document.getElementById("overview-chart-select").addEventListener("change", (e) => {
